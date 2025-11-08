@@ -1,5 +1,5 @@
 function userCard() {
-  //function would be replaced by "component"
+  //function 'would' be `replaced` by "component"
   <div style={styles.card}>
     <img src={userCard.avatar} alt={userCard.name} />
     <h2>{userCard.name}</h2>
@@ -7,19 +7,16 @@ function userCard() {
     <button style={styles.button}>View Profile</button>
   </div>;
 
+  // <p>yo</p>
+
   const styles = {
-    border: "2px solid purple"
+    border: "2px solid purple",
   };
 }
-/*
-<htmlTag>this is a script {
-  for (let i = 0 ; i < 10 ; i++){
-    print `\nline ${i}`;
-  }
-}</htmlTag>
-*/
 
-<userCard name="Alice" email="alice@example.com" avatar="/avatar.png" />;
+(<userCard name="Alice" email="alice@example.com" avatar="/avatar.png" />)
 ((BEGIN))
-const alfa = 45.5;
-((END))
+const alfa = 1 + 4 * 2 - (1 + 1);
+const beta = alfa * 2;
+let charlie = beta * beta;
+((END));
