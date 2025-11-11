@@ -15,8 +15,10 @@ function userCard() {
 }
 
 (<userCard name="Alice" email="alice@example.com" avatar="/avatar.png" />)
-((BEGIN))
 const alfa = 1 + 4 * 2 - (1 + 1);
 const beta = alfa * 2;
 let charlie = beta * beta;
-((END));
+((BEGIN))
+const a = 1+2*2;
+const b = a *2;
+((END))

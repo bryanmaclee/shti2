@@ -37,6 +37,11 @@ export function tokenize(src) {
     return false;
   }
 
+  function isKeyword(word) {
+    const kw = ["const", "let"];
+    return kw.includes(word);
+  }
+
   function isAlpha(src) {
     const rx = /[a-zA-Z_$]/;
     return rx.test(src);
@@ -90,7 +95,7 @@ export function tokenize(src) {
         chunk += c();
         inc();
       }
-      add(chunk, "Number", "numeric_lit");
+      add(chunk, "number", "numeric_lit");
       continue;
     } else if (isAlpha(c())) {
       inc();
@@ -98,7 +103,11 @@ export function tokenize(src) {
         chunk += c();
         inc();
       }
-      add(chunk, "Word", "word");
+      if (isKeyword(chunk)) {
+        add(chunk, "word", "keyword");
+      } else {
+        add(chunk, "Word", "word");
+      }
       continue;
     } else if ((usefullVar = skippable(chunk))) {
       inc();
@@ -127,6 +136,6 @@ export function tokenize(src) {
     );
     return tokens;
   }
-  add("EOF", "EOF");
+  add("EOF", "EOF", "EOF");
   return tokens;
 }
