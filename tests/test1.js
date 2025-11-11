@@ -19,6 +19,6 @@ const alfa = 1 + 4 * 2 - (1 + 1);
 const beta = alfa * 2;
 let charlie = beta * beta;
 ((BEGIN))
-const a = 1+2*2;
-const b = a *2;
+let c = 1+2*2
+const b = c *2
 ((END))

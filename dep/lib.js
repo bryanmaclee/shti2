@@ -21,6 +21,7 @@ export const Files = {
   inTest: "./tests/test1.js",
   outputFile: "out/program.json",
   outputText: "out/tokens.json",
+  outputTrunk: 'out/truncated.json',
   testFile: function (){
     return args[0] ? args[0] : this.inTest;
   }

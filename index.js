@@ -14,7 +14,10 @@ import { environment } from "./dep/env.js";
   // console.log(env.getParent());
   const lexed = tokenize(data);
   await Bun.write(Files.outputText, JSON.stringify(lexed, null, 2));
-  const program = preParse(lexed);
+  const woWhite = lexed.filter((thing) => thing.kind !== "format");
+  // const woWhite = lexed.filter((thing) => thing.type !== "white_space");
+  await Bun.write(Files.outputTrunk, JSON.stringify(woWhite, null, 2));
+  const program = preParse(woWhite);
   // console.log(program)
   await Bun.write(Files.outputFile, JSON.stringify(program, null, 2));
 })();
@@ -26,13 +29,23 @@ function Program() {
   };
 }
 
-function preParse(dat) {
-  const data = dat.filter((thing) => thing.type !== "white_space");
+function preParse(data) {
   let iter = 0;
+  let exit = false;
   const statements = [];
 
-  function eat() {
-    return data[iter++];
+  function expect(exp, msg) {
+    if (!exp()) {
+      console.error(msg);
+      exit = true;
+    }
+    // eat()
+  }
+  function expectBef(exp, bef, msg) {}
+
+  function eat(i = 1) {
+    iter += i;
+    return data[iter - i];
   }
 
   function at() {
@@ -43,33 +56,57 @@ function preParse(dat) {
     return data[i];
   }
 
-  function parseConstStmt(prt) {
-    const stmt = [prt];
-    let num = prt.token_num + 1;
+  function parseVarStmt(prt) {
+    const stmt = {
+      part: "var_dec",
+      type: prt.value,
+      name: "",
+      isConst: false,
+      dependencies: [],
+      epression: [],
+    };
+    if (prt.value === "const") stmt.isConst = true;
+    const strtNum = prt.token_num + 1;
+    let num = prt.token_num;
     let nextTok = walk(num++);
+    expect(() => nextTok.kind === "word", "variable name expected");
+    stmt.name = nextTok.value;
+    // num++;
+    nextTok = walk(num++);
+    expect(() => nextTok.value === "=", "expected = ");
+    nextTok = walk(num++);
     while (
       nextTok.kind !== "keyword" &&
       nextTok.kind !== "EOF" &&
-      nextTok.type !== "semicolon" 
+      nextTok.type !== "semicolon"
     ) {
-      // console.log(nextTok);
-      stmt.push(nextTok);
-      nextTok = walk(num++);
+      stmt.epression.push(nextTok);
+      nextTok = walk(num);
+      num++;
     }
+    eat(num - strtNum);
     return stmt;
   }
 
-  while (at().kind !== "EOF") {
-    // console.log(eat())
+  function parseStmt() {
     const cur = eat();
     switch (cur.type) {
       case "word":
         switch (cur.kind) {
           case "keyword":
-            console.log(cur.value);
-            statements.push(parseConstStmt(cur));
+            switch (cur.value) {
+              case "const":
+              case "let":
+                statements.push(parseVarStmt(cur));
+                break;
+            }
         }
     }
+  }
+
+  while (at() && at().kind !== "EOF") {
+    if (exit) break;
+    parseStmt();
   }
 
   return statements;
