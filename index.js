@@ -97,16 +97,16 @@ function preParse(data) {
             switch (cur.value) {
               case "const":
               case "let":
-                statements.push(parseVarStmt(cur));
-                break;
+                return parseVarStmt(cur);
             }
         }
     }
+  // return cur;
   }
 
   while (at() && at().kind !== "EOF") {
     if (exit) break;
-    parseStmt();
+    statements.push(parseStmt());
   }
 
   return statements;
