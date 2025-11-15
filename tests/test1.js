@@ -19,6 +19,8 @@ const alfa = 1 + 4 * 2 - (1 + 1);
 const beta = alfa * 2;
 let charlie = beta * beta;
 ((BEGIN))
-let c = 1+2*2
-const b = c *2
+function doit(e, f){
+  let a = 1+2*2
+  const b = c = d *2
+}
 ((END))

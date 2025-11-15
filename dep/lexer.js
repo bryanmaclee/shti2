@@ -38,7 +38,7 @@ export function tokenize(src) {
   }
 
   function isKeyword(word) {
-    const kw = ["const", "let"];
+    const kw = ["const", "let", 'function'];
     return kw.includes(word);
   }
 
@@ -106,7 +106,7 @@ export function tokenize(src) {
       if (isKeyword(chunk)) {
         add(chunk, "word", "keyword");
       } else {
-        add(chunk, "Word", "word");
+        add(chunk, "word", "identifier");
       }
       continue;
     } else if ((usefullVar = skippable(chunk))) {
