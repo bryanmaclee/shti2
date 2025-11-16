@@ -1,16 +1,16 @@
 import { tokenTypes } from "../dep/syntax";
 
 export function truncateInput(datastr) {
-  const begin = "((BEGIN))";
+  const begin = "BEGIN;";
   const dataStart = datastr.includes(begin)
     ? datastr.substring(
-        datastr.indexOf("((BEGIN))") +
+        datastr.indexOf("BEGIN;") +
           begin.length +
           tokenTypes[0]?.test.exec(datastr)?.length
       )
     : datastr;
-  const data = dataStart.includes("((END))")
-    ? dataStart.substring(0, dataStart.indexOf("((END))"))
+  const data = dataStart.includes("END;")
+    ? dataStart.substring(0, dataStart.indexOf("END;"))
     : dataStart;
   return data;
 }

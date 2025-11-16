@@ -14,13 +14,15 @@ function userCard() {
   };
 }
 
-(<userCard name="Alice" email="alice@example.com" avatar="/avatar.png" />)
+<userCard name="Alice" email="alice@example.com" avatar="/avatar.png" />;
 const alfa = 1 + 4 * 2 - (1 + 1);
 const beta = alfa * 2;
 let charlie = beta * beta;
-((BEGIN))
-function doit(e, f){
-  let a = 1+2*2
-  const b = c = d *2
+BEGIN;
+function dodat(g,h) {
+  function doit(e, f) {
+    let a = 1 + 2 * 2;
+    const b = c = d * 2;
+  }
 }
-((END))
+END;

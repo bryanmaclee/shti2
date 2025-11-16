@@ -1,4 +1,3 @@
-
 // export function environment(parent) {
 //   const global = parent ? false : true;
 //   const Parent = parent;
@@ -32,11 +31,9 @@
 //   };
 // }
 
-
-
-export function environment(parent) {
+export function environment(parent = false) {
   const global = parent ? false : true;
-  const Parent = global ? 'global' : parent;
+  const Parent = global ? "global" : parent;
   const Variables = new Map();
   const Constants = new Set();
   const Functions = new Map();
@@ -65,6 +62,6 @@ export function environment(parent) {
     Functions,
     declareVar,
     getParent,
-    assingnVar
+    assingnVar,
   };
 }

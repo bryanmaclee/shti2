@@ -1,6 +1,7 @@
+import { environment } from "./env.js";
 
-
-export function preParse(data) {
+export function preParse(data, env = false) {
+  // console.log(env);
   let iter = 0;
   let exit = false;
   const statements = [];
@@ -12,7 +13,7 @@ export function preParse(data) {
   function at() {
     return data[iter];
   }
-  function walk(i) {
+  function walk(i = 1) {
     return data[i];
   }
 
@@ -32,6 +33,8 @@ export function preParse(data) {
       type: valu,
       name: "",
       isConst: false,
+      envir: environment(env),
+      params: [],
       dependencies: [],
       expression: [],
     };
@@ -55,6 +58,8 @@ export function preParse(data) {
       nextTok = walk(num++);
     }
     eat(num - strtNum);
+    stmt.envir.declareVar(stmt.name, stmt.expression, stmt.isConst)
+    console.log(JSON.stringify(stmt, null, 2))
     stmt.expression = preParse(stmt.expression);
     // env.declareVar(stmt.name, stmt.expression, stmt.isConst ? "const" : false);
     return stmt;
@@ -81,6 +86,10 @@ export function preParse(data) {
       nextTok = walk(num++);
     }
     eat(num - strtNum);
+    stmt.envir.declareVar(stmt.name, stmt.expression, stmt.isConst)
+    console.log(JSON.stringify(stmt.envir.Variables, null, 5))
+    console.log(stmt.envir.Variables);
+    
     stmt.expression = preParse(stmt.expression);
     // env.declareVar(stmt.name, stmt.expression, stmt.isConst ? "const" : false);
     return stmt;
@@ -98,22 +107,30 @@ export function preParse(data) {
     eat();
     while (at().type !== "close_paren") {
       if (at().kind === "identifier") {
-        stmt.dependencies.push(eat().value);
+        stmt.params.push(eat().value);
         if (at().type === "comma") {
           eat();
         }
       }
     }
     eat();
-    let l = 0; 
+    let l = 0;
     expect(() => at().type === "open_curly", "expected {");
     eat();
-    while(at().type !== 'close_curly'){
-      stmt.expression.push(eat())
-      l++;
-    if (l > data.length) return stmt;
+    let nested = 1;
+    while (walk().type !== "close_curly" && nested !== 0) {
+      // console.log(at().value, nested);
+      if (at().type === "open_curly") {
+        nested++;
+      } else if (at().type === "close_curly") {
+        nested--;
+      }
+      stmt.expression.push(eat());
+      // l++;
+      // if (l > data.length) return stmt;
     }
-    stmt.expression = preParse(stmt.expression)
+    // stmt.envir.declareVar(stmt.name, stmt.expression, stmt.isConst)
+    stmt.expression = preParse(stmt.expression, stmt.envir);
     return stmt;
   }
 

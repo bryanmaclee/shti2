@@ -38,7 +38,7 @@ export function tokenize(src) {
   }
 
   function isKeyword(word) {
-    const kw = ["const", "let", 'function'];
+    const kw = Tokens.keyword.map((w) => w.type);
     return kw.includes(word);
   }
 

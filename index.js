@@ -11,7 +11,7 @@ import { preParse } from "./dep/preparser.js";
   const datastr = await Bun.file(Files.testFile()).text();
   const data = truncateInput(datastr);
   console.log(data);
-  const env = environment();
+  // const env = environment();
   // console.log(env.getParent());
   const lexed = tokenize(data);
   await Bun.write(Files.outputText, JSON.stringify(lexed, null, 2));
@@ -21,7 +21,7 @@ import { preParse } from "./dep/preparser.js";
   const program = preParse(woWhite);
   // console.log(program)
   await Bun.write(Files.outputFile, JSON.stringify(program, null, 2));
-  console.log(parseProgram(program))
+  // console.log(parseProgram(program))
 })();
 
 // function Program() {
@@ -34,5 +34,5 @@ import { preParse } from "./dep/preparser.js";
 
 function parseProgram(data){
   let exp = data[0].expression;
-  console.log(exp);
+  // console.log(exp);
 }
