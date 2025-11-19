@@ -18,11 +18,14 @@ function userCard() {
 const alfa = 1 + 4 * 2 - (1 + 1);
 const beta = alfa * 2;
 let charlie = beta * beta;
-BEGIN;
-function dodat(g,h) {
+function dodat(g, h) {
   function doit(e, f) {
     let a = 1 + 2 * 2;
-    const b = c = d * 2;
+    const b = (c = d * 2);
   }
 }
+
+BEGIN;
+const a = 1 + 2 * 2 + 1;
+const b = 2 * 3 + 4;
 END;

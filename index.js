@@ -2,8 +2,9 @@
 import { truncateInput, Files } from "./dep/lib";
 import { tokenize } from "./dep/lexer";
 import { Tokens } from "./dep/syntax";
-import { environment } from "./dep/env.js";
+// import { environment } from "./dep/env.js";
 import { preParse } from "./dep/preparser.js";
+import { Environment } from "./dep/env.js";
 // import { it } from "bun:test";
 // import { parseEnv } from "util";
 
@@ -18,7 +19,8 @@ import { preParse } from "./dep/preparser.js";
   const woWhite = lexed.filter((thing) => thing.kind !== "format");
   // const woWhite = lexed.filter((thing) => thing.type !== "white_space");
   await Bun.write(Files.outputTrunk, JSON.stringify(woWhite, null, 2));
-  const program = preParse(woWhite);
+  const program = instanciateProgram(woWhite, Environment())
+  program.expression = preParse(program.expression, program.envir);
   // console.log(program)
   await Bun.write(Files.outputFile, JSON.stringify(program, null, 2));
   // console.log(parseProgram(program))
@@ -35,4 +37,12 @@ import { preParse } from "./dep/preparser.js";
 function parseProgram(data){
   let exp = data[0].expression;
   // console.log(exp);
+}
+
+function instanciateProgram(data, env){
+  return {
+    type: 'program',
+    envir: env,
+    expression: data,
+  }
 }
