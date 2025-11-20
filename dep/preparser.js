@@ -1,11 +1,41 @@
-// import { unchangedTextChangeRange } from "typescript";
 import { Environment } from "./env.js";
+import { evaluateExpr } from "./eval.js";
 
 export function preParse(data, env = false) {
-  // console.log(env);
   let iter = 0;
   let exit = false;
   const statements = [];
+  
+  while (at() && at().kind !== "EOF" && iter < data.length) {
+    if (exit) break;
+    const curStmt = parseStmt();
+  
+    if (curStmt) {
+      statements.push(curStmt);
+    }
+  }
+
+  function parseStmt() {
+    const cur = eat();
+    switch (cur.type) {
+      case "word":
+        switch (cur.kind) {
+          case "keyword":
+            switch (cur.value) {
+              case "const":
+              case "let":
+                return parseVarDec(cur);
+              case "function":
+                return parseFunctionStmt(cur);
+            }
+          case "identifier":
+            if (walk(iter).type === "equals") {
+              return parseVarAssignStmt(cur);
+            }
+        }
+    }
+    return false;
+  }
 
   function eat(i = 1) {
     iter += i;
@@ -42,6 +72,45 @@ export function preParse(data, env = false) {
     };
   }
 
+  function declaration(part, valu ) {
+    return {
+      // part: "var_dec",
+      part,
+      type: valu,
+      name: '',
+      isConst: false,
+      dependencies: [],
+      expression: [],
+    };
+  }
+
+  function parseVarDec(prt) {
+    const stmt = declaration("var_dec", prt.value);
+    if (prt.value === "const") stmt.isConst = true;
+    const strtNum = iter + 1;
+    let num = iter;
+    let nextTok = walk(num++);
+    expect(() => nextTok.kind === "identifier", "variable name expected");
+    stmt.name = nextTok.value;
+    nextTok = walk(num++);
+    expect(() => nextTok.value === "=", "expected = ");
+    nextTok = walk(num++);
+    while (
+      nextTok !== undefined &&
+      nextTok.kind !== "keyword" &&
+      nextTok.kind !== "EOF" &&
+      nextTok.type !== "semicolon"
+    ) {
+      stmt.expression.push(nextTok);
+      nextTok = walk(num++);
+    }
+    eat(num - strtNum);
+    stmt.expression = preParse(stmt.expression, env);
+    env.declareVar(stmt.name, stmt.expression.value, stmt.isConst);
+    // console.log(stmt.expression.value)
+    return stmt;
+  }
+
   function parseVarAssignStmt(prt) {
     const stmt = statement("var_assignment", prt.value);
     stmt.name = prt.value;
@@ -66,36 +135,7 @@ export function preParse(data, env = false) {
     // env.declareVar(stmt.name, stmt.expression, stmt.isConst ? "const" : false);
     return stmt;
   }
-
-  function parseVarStmt(prt) {
-    const stmt = statement("var_dec", prt.value);
-    if (prt.value === "const") stmt.isConst = true;
-    const strtNum = iter + 1;
-    let num = iter;
-    let nextTok = walk(num++);
-    expect(() => nextTok.kind === "identifier", "variable name expected");
-    stmt.name = nextTok.value;
-    nextTok = walk(num++);
-    expect(() => nextTok.value === "=", "expected = ");
-    nextTok = walk(num++);
-    while (
-      nextTok !== undefined &&
-      nextTok.kind !== "keyword" &&
-      nextTok.kind !== "EOF" &&
-      nextTok.type !== "semicolon"
-    ) {
-      stmt.expression.push(nextTok);
-      nextTok = walk(num++);
-    }
-    eat(num - strtNum);
-    stmt.envir.declareVar(stmt.name, stmt.expression, stmt.isConst);
-    // console.log(JSON.stringify(stmt.envir.Variables, null, 5))
-    // console.log(stmt.envir.Variables);
-
-    stmt.expression = preParse(stmt.expression);
-    // env.declareVar(stmt.name, stmt.expression, stmt.isConst ? "const" : false);
-    return stmt;
-  }
+  
 
   function parseFunctionStmt(prt) {
     expect(() => at().kind === "identifier", "expected identifier");
@@ -103,10 +143,7 @@ export function preParse(data, env = false) {
     const stmt = statement("fn_dec", "function", at().value);
     stmt.isConst = true;
     stmt.name = eat().value;
-    const isParen = expect(
-      () => at().type === "open_paren",
-      "expected open paren"
-    );
+    const isParen = expect(() => at().type === "open_paren", "expected open paren");
     if (!isParen) {
       return stmt;
     }
@@ -136,112 +173,14 @@ export function preParse(data, env = false) {
     return stmt;
   }
 
-  function parseStmt() {
-    const cur = eat();
-    switch (cur.type) {
-      case "word":
-        switch (cur.kind) {
-          case "keyword":
-            switch (cur.value) {
-              case "const":
-              case "let":
-                return parseVarStmt(cur);
-              case "function":
-                return parseFunctionStmt(cur);
-            }
-          case "identifier":
-            if (walk(iter).type === "equals") {
-              return parseVarAssignStmt(cur);
-            }
-        }
-    }
-    return false;
-  }
-
-  while (at() && at().kind !== "EOF" && iter < data.length) {
-    if (exit) break;
-    const curStmt = parseStmt();
-
-    if (curStmt) {
-      statements.push(curStmt);
-    }
-  }
 
   if (statements.length > 0) {
     return statements;
   }
-  stmt.value = evaluateExpr(data)
-  return stmt;
+  // console.log(evaluateExpr(data));
+  return evaluateExpr(data, env);
 }
 
-function evaluateExpr(tokens) {
-  let iter = 0;
-  let exit = false;
-  const statements = [];
-
-  function eat(i = 1) {
-    iter += i;
-    return tokens[iter - i];
-  }
-
-  function at(i = 0) {
-    return tokens[iter + i];
-  }
-
-  // let part = 0;
-  for (const operator of operators) {
-    // console.log(operator)
-    iter = 0;
-    while (at()) {
-      if (at().value === operator) {
-        // console.log(operator)
-        let preAtom = at(-1);
-        let postAtom = at(1);
-        const thisOp = at();
-        // console.log(preAtom, thisOp, postAtom);
-        if (preAtom.type === "word") {
-          console.log("lookup var");
-        } else if (preAtom.type === "number") {
-        }
-        // console.log("*********************", preAtom);
-        if (!preAtom) preAtom = { value: 0 };
-        if (!postAtom) postAtom = { value: 0 };
-        const part = evaluatePart(
-          parseFloat(preAtom.value),
-          parseFloat(postAtom.value),
-          thisOp.value
-        );
-        // console.log(part);
-        // const newTokens = tokens.filter(
-        //   (a, i) => (i < iter - 1 || i > iter + 1)
-        // );
-
-        // console.log(part)
-        // console.log("----------------------------------");
-        tokens.splice(iter - 1, 3, part);
-        // console.log(tokens);
-        if (!tokens.length) return part;
-      } else {
-        eat();
-      }
-    }
-    // console.log(tokens)
-    // console.log(part)
-  }
-  function evaluatePart(pre, post, op) {
-    switch (op) {
-      case "*":
-        return { value: pre * post };
-      case "/":
-        return { value: pre / post };
-      case "+":
-        return { value: pre + post };
-      case "-":
-        return { value: pre - post };
-    }
-  }
-}
-const operators = ["*", "/", "+", "-"];
 
 // function infixBindingPower(op) {
 //   switch (op) {

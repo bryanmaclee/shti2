@@ -24,8 +24,10 @@ function dodat(g, h) {
     const b = (c = d * 2);
   }
 }
-
 BEGIN;
+function one(){
+  const fa = 2 + 2;
+}
 const a = 1 + 2 * 2 + 1;
-const b = 2 * 3 + 4;
+const b = a + 3 * 4 / 2;
 END;

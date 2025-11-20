@@ -19,10 +19,11 @@ import { Environment } from "./dep/env.js";
   const woWhite = lexed.filter((thing) => thing.kind !== "format");
   // const woWhite = lexed.filter((thing) => thing.type !== "white_space");
   await Bun.write(Files.outputTrunk, JSON.stringify(woWhite, null, 2));
-  const program = instanciateProgram(woWhite, Environment())
+  const program = instanciateProgram(woWhite, Environment());
   program.expression = preParse(program.expression, program.envir);
   // console.log(program)
-  await Bun.write(Files.outputFile, JSON.stringify(program, null, 2));
+  const progOut = preStringify(program);
+  await Bun.write(Files.outputFile, JSON.stringify(progOut, null, 2));
   // console.log(parseProgram(program))
 })();
 
@@ -33,16 +34,35 @@ import { Environment } from "./dep/env.js";
 //   };
 // }
 
+function preStringify(data) {
+  let rVal;
+  let expr = {};
+  if ("envir" in data) {
+    rVal = JSON.parse(JSON.stringify(data.envir));
+    rVal.Variables = Object.fromEntries(data.envir.Variables);
+    rVal.Constants = Array.from(data.envir.Constants);
 
-function parseProgram(data){
+  }
+  data.envir = rVal;
+  if ("expression" in data) {
+    if (data.expression.length) {
+      for (const a of data.expression) {
+        preStringify(a);
+      }
+    }
+  }
+  return data;
+}
+
+function parseProgram(data) {
   let exp = data[0].expression;
   // console.log(exp);
 }
 
-function instanciateProgram(data, env){
+function instanciateProgram(data, env) {
   return {
-    type: 'program',
+    type: "program",
     envir: env,
     expression: data,
-  }
+  };
 }
