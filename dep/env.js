@@ -13,6 +13,7 @@ export function Environment(e = false, name = "global") {
   const Variables = new Map();
   const Constants = new Set();
   const Functions = [];
+  const Children = [];
 
   function declareVar(name, value, kind) {
     Variables.set(name, value);
@@ -47,6 +48,7 @@ export function Environment(e = false, name = "global") {
     Variables,
     Constants,
     Functions,
+    Children,
     declareVar,
     getParent,
     assignVar,

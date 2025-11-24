@@ -1,14 +1,5 @@
-import { Tokens } from "./syntax";
+import { Tokens, operator } from "./syntax";
 
-function Token(value, type, posit, line, chr) {
-  return {
-    value,
-    type,
-    posit,
-    line,
-    chr,
-  };
-}
 
 export function tokenize(src) {
   const tokens = [];
@@ -26,12 +17,8 @@ export function tokenize(src) {
 
   function skippable(str) {
     if (str === " " || str === "\t") {
-      // char++;
       return "s";
     } else if (str === "\n" || str === "\r") {
-      // lineStartPos = itter;
-      // char = 1;
-      // line++;
       return "l";
     }
     return false;
@@ -67,10 +54,6 @@ export function tokenize(src) {
   }
 
   function add(value, type, kind, addTok = true) {
-    // startCol = itter;
-    // char = itter - lineStartPos + 1;
-    // console.log(JSON.stringify(Tokens.operator, null, 2))
-    // startCol = char - value.length;
     tokens.push({
       value,
       length: value.length,
@@ -84,11 +67,10 @@ export function tokenize(src) {
     });
   }
 
-  lexloop: while (itter < src.length) {
+   while (itter < src.length) {
     let chunk = "";
     let usefullVar;
     chunk += c();
-    // console.log('"', chunk, '"');
     if (isNum(chunk)) {
       inc();
       while (itter < src.length && (isNum(c()) || c() === ".")) {
@@ -120,14 +102,14 @@ export function tokenize(src) {
         add(chunk, "white_space", "format", false);
       }
       continue;
-    } else {
+    } else if (operator.has(chunk)){
       inc();
-      for (const i of Tokens.operator) {
-        if (i.test.test(chunk)) {
-          add(chunk, i.type, "operator");
-          continue lexloop;
-        }
+      while (itter < src.length && operator.has(chunk + c())) {
+        chunk += c();
+        inc();
       }
+      add(chunk, operator.get(chunk), "operator");
+      continue;
     }
     console.error(
       `Lexer Error:\nunrecognized character: "${chunk}" found in source at line ${line} char ${
@@ -139,3 +121,4 @@ export function tokenize(src) {
   add("EOF", "EOF", "EOF");
   return tokens;
 }
+

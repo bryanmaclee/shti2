@@ -1,15 +1,17 @@
 import { Environment } from "./env.js";
 import { evaluateExpr } from "./eval.js";
+import { deps} from "./lib.js"
 
 export function preParse(data, env = false) {
   let iter = 0;
   let exit = false;
   const statements = [];
-  
+  // console.log(env)
+
   while (at() && at().kind !== "EOF" && iter < data.length) {
     if (exit) break;
     const curStmt = parseStmt();
-  
+
     if (curStmt) {
       statements.push(curStmt);
     }
@@ -66,18 +68,19 @@ export function preParse(data, env = false) {
       isConst: false,
       // envir: environment(env),
       envir: Environment(env, nam),
+      environmentId:Environment(env, nam).Lineage,
       params: [],
       dependencies: [],
       expression: [],
     };
   }
 
-  function declaration(part, valu ) {
+  function declaration(part, valu) {
     return {
       // part: "var_dec",
       part,
       type: valu,
-      name: '',
+      name: "",
       isConst: false,
       dependencies: [],
       expression: [],
@@ -106,8 +109,10 @@ export function preParse(data, env = false) {
     }
     eat(num - strtNum);
     stmt.expression = preParse(stmt.expression, env);
+    while (deps.length){
+      stmt.dependencies.push(deps.pop())
+    }
     env.declareVar(stmt.name, stmt.expression.value, stmt.isConst);
-    // console.log(stmt.expression.value)
     return stmt;
   }
 
@@ -132,18 +137,24 @@ export function preParse(data, env = false) {
     stmt.envir.declareVar(stmt.name, stmt.expression, stmt.isConst);
     // console.log(JSON.stringify(stmt, null, 2))
     stmt.expression = preParse(stmt.expression);
+    while (deps.length){
+      stmt.dependencies.push(deps.pop())
+    }
     // env.declareVar(stmt.name, stmt.expression, stmt.isConst ? "const" : false);
     return stmt;
   }
-  
 
   function parseFunctionStmt(prt) {
     expect(() => at().kind === "identifier", "expected identifier");
     env.assignFn(at().value);
     const stmt = statement("fn_dec", "function", at().value);
+    console.log(stmt.environmentId, stmt.name)
     stmt.isConst = true;
     stmt.name = eat().value;
-    const isParen = expect(() => at().type === "open_paren", "expected open paren");
+    const isParen = expect(
+      () => at().type === "open_paren",
+      "expected open paren"
+    );
     if (!isParen) {
       return stmt;
     }
@@ -170,98 +181,15 @@ export function preParse(data, env = false) {
       stmt.expression.push(eat());
     }
     stmt.expression = preParse(stmt.expression, stmt.envir);
+    while (deps.length){
+      stmt.dependencies.push(deps.pop())
+    }
     return stmt;
   }
-
 
   if (statements.length > 0) {
     return statements;
   }
-  // console.log(evaluateExpr(data));
+  // console.log(data, env)
   return evaluateExpr(data, env);
 }
-
-
-// function infixBindingPower(op) {
-//   switch (op) {
-//     case "+":
-//     case "-":
-//       return [1, 1.1];
-//     case "*":
-//     case "/":
-//       return [2, 2.1];
-//     default:
-//       console.error(`unknown operator: '${op}'`);
-//   }
-// }
-// function evalThis(mbp){
-//   // console.log('doin it')
-//   let left = eat();
-//   if (left.type !== "number" && left.type !== "Word" ) {
-//     console.error(`Bad Token: '${left.value}'`);
-//     return null;
-//   }
-//   let inter = eat();
-//   if (!inter)return left.value;
-//   let loop =true;
-//   while (at() || !loop){
-//     if (inter.type === 'operator'){
-//       let [lbp, rpb] = infixBindingPower(inter.value);
-//       let right = evalThis(rbp)
-//       if ()
-//     }
-//   }
-// }
-// console.log(evalThis(0));
-
-// function walk() {
-//   let left;
-//   if (at()) {
-//     if (at().kind === "operator") {
-//     } else if (at().type === "number") {
-//       left = eat();
-//     }
-//   }else{
-//     return;
-//   }
-//   console.log("blah: ", at().kind);
-// }
-// function parseExpr(minBp) {
-//   // console.log("value: ", at().value);
-//   let left = eat();
-//   if (left.type !== "number" && left.type !== "Word") {
-//     console.error(`Bad Token: '${left.value}'`);
-//     return null;
-//   }
-//   // console.log("left: ", left);
-//   let oper = eat();
-//   if (!oper) return left.value;
-//   // console.log("operator: ", oper);
-//   let loop = true;
-//   while (loop && oper !== undefined) {
-//     // console.log("we in hea");
-//     if (!oper) {
-//       console.log("no oper");
-//       return left.value;
-//     }
-//     if (oper.type === "EOF") {
-//       return left.value;
-//     } else if (oper.kind !== "operator") {
-//       console.error(`expected operator`);
-//       return null;
-//     }
-//     // eat();
-//     let [leftBp, rightbp] = infixBindingPower(oper.value);
-//     if (leftBp < minBp) break;
-//     // if (leftBp < minBp) loop = false;
-//     let right = parseExpr(rightbp);
-//     left = { op: oper.value, l: [left.value, right] };
-//     oper = eat();
-//   }
-//   console.log(left);
-//   return left;
-// }
-// // parseExpr(0)
-// console.log(JSON.stringify(parseExpr(0), null, 2));
-// // walk();
-// return tokens;

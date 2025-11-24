@@ -27,6 +27,39 @@ export const Files = {
   }
 };
 
+export function preStringify(data) {
+  let rVal;
+  if ("envir" in data) {
+    rVal = JSON.parse(JSON.stringify(data.envir));
+    rVal.Variables = Object.fromEntries(data.envir.Variables);
+    rVal.Constants = Array.from(data.envir.Constants);
+  }
+  data.envir = rVal;
+  if ("expression" in data) {
+    if (data.expression.length) {
+      for (const a of data.expression) {
+        preStringify(a);
+      }
+    }
+  }
+  return data;
+}
+
+export const deps = [];
+export const stack = [];
+
+export function pushOnStack(fnName, params = [], callerEnv){
+  stack.push({
+    fnName,
+    params,
+    callerEnv,
+  })
+}
+
+export function popOffstack(){
+  return stack.pop();
+}
+
 // let testFile = "";
 // if (args[0]) {
 //   testFile = args[0];

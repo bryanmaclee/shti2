@@ -1,9 +1,11 @@
+import { deps } from "./lib.js";
 const operators = ["*", "/", "+", "-"];
 
 export function evaluateExpr(tokens, env) {
   let iter = 0;
   let exit = false;
   const statements = [];
+  if (tokens.at(-1).type === 'semi_colon')tokens.pop();
 
   function eat(i = 1) {
     iter += i;
@@ -14,27 +16,28 @@ export function evaluateExpr(tokens, env) {
     return tokens[iter + i];
   }
 
-  // let part = 0;
   for (const operator of operators) {
-    // console.log(operator)
     iter = 0;
     while (at()) {
       if (at().value === operator) {
-        // console.log(operator)
         let preAtom = at(-1);
         let postAtom = at(1);
         const thisOp = at();
-        // console.log(preAtom, thisOp, postAtom);
         if (preAtom.type === "word") {
-          // console.log(`lookup var: ${JSON.stringify(preAtom)}` );
-          if(env.Variables.has(preAtom.value)){
-            preAtom = {value: env.Variables.get(preAtom.value)}
-          }else{
-            throw "undefined!!!"
+          if (env.Variables.has(preAtom.value)) {
+            deps.push(preAtom.value);
+            preAtom = { value: env.Variables.get(preAtom.value) };
+          } else {
+            if (env.part === "fn_dec") {
+              // return;
+              eat();
+              continue
+            } else {
+              throw `${preAtom.value} is undefined!!!`;
+            }
           }
         } else if (preAtom.type === "number") {
         }
-        // console.log("*********************", preAtom);
         if (!preAtom) preAtom = { value: 0 };
         if (!postAtom) postAtom = { value: 0 };
         const part = evaluatePart(
